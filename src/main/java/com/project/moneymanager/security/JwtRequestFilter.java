@@ -24,6 +24,22 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
     {
+
+        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+        String path = request.getRequestURI();
+
+        if (path.equals("/register") ||
+                path.equals("/login") ||
+                path.equals("/activate") ||
+                path.equals("/status") ||
+                path.equals("/health")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
         final String authHeader=request.getHeader("Authorization");
         String email=null;
         String jwt=null;

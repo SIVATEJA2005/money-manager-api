@@ -76,7 +76,6 @@ public class ProfileServices {
             emailServices.sendEmail(profileEntity.getEmail(),subject,body);
             return toProfileDto(savedProfileEntity);
 
-
     }
 
     public boolean isActive(String email)
