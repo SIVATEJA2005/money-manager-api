@@ -68,20 +68,16 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class EmailServices {
-
+public class EmailServices
+{
     @Value("${BREVO_API_KEY}")
     private String apiKey;
     private final ProfileRepository profileRepository;
     @Value("${BACKEND_URL}")
     private String backendUrl;
-
     @Value("${FROM_EMAIL}")
     private String fromEmail;
-
     private final String SEND_URL = "https://api.brevo.com/v3/smtp/email";
-
-    // Send activation email with unique token
     public void sendEmail(String toEmail, String subject, String htmlContent) {
         RestTemplate restTemplate = new RestTemplate();
 

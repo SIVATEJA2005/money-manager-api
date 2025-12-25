@@ -75,9 +75,7 @@ public class ProfileServices {
             String body="click on the following link to activate your account "+activateLink;
             emailServices.sendEmail(profileEntity.getEmail(),subject,body);
             return toProfileDto(savedProfileEntity);
-
     }
-
     public boolean isActive(String email)
     {
         ProfileEntity profile=profileRepository.findByEmail(email)
@@ -91,7 +89,6 @@ public class ProfileServices {
             return true;
         }
     }
-
     public ProfileDto getProfile(String email)
     {
         try{
@@ -102,7 +99,6 @@ public class ProfileServices {
         }
     }
 
-
     public Map<String, Object> authenticateAndGenerateAuthToekn(AuthDto authDto)
     {
             try
@@ -112,7 +108,6 @@ public class ProfileServices {
                         "token",jwtUtil.generateToken(authDto.getEmail()),
                         "user",getProfile(authDto.getEmail())
                 );
-
             }catch(Exception e)
             {
                 throw new RuntimeException("email or password not found");

@@ -25,31 +25,30 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
     {
 
-        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
+        if (request.getMethod().equalsIgnoreCase("OPTIONS"))
+        {
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-        String path = request.getRequestURI();
 
+        String path = request.getRequestURI();
         if (path.equals("/register") ||
                 path.equals("/login") ||
                 path.equals("/activate") ||
                 path.equals("/status") ||
                 path.equals("/health")) {
-
             filterChain.doFilter(request, response);
             return;
         }
+
         final String authHeader=request.getHeader("Authorization");
         String email=null;
         String jwt=null;
-//        System.out.println(authHeader);
 
         if(authHeader!=null && authHeader.startsWith("Bearer "))
         {
             jwt=authHeader.substring(7);
             email=jwtUtil.extractUserName(jwt);
-//            System.out.println(jwt);
         }
 
         if(email!=null && SecurityContextHolder.getContext().getAuthentication()==null)

@@ -19,7 +19,8 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(jwt_secret.getBytes());
     }
     private final long time=1000*60*60*24*30L;
-    public String generateToken(String email){
+    public String generateToken(String email)
+    {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
