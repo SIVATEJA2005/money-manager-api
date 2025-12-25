@@ -32,14 +32,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI();
-        if (path.equals("/register") ||
-                path.equals("/login") ||
-                path.equals("/activate") ||
-                path.equals("/status") ||
-                path.equals("/health")) {
+        if (path.startsWith("/api/v1.0/register") ||
+                path.startsWith("/api/v1.0/login") ||
+                path.startsWith("/api/v1.0/activate") ||
+                path.startsWith("/api/v1.0/status") ||
+                path.startsWith("/api/v1.0/health")) {
+
             filterChain.doFilter(request, response);
             return;
         }
+
 
         final String authHeader=request.getHeader("Authorization");
         String email=null;
