@@ -1,6 +1,4 @@
 package com.project.moneymanager.controllers;
-
-
 import com.project.moneymanager.dto.AuthDto;
 import com.project.moneymanager.dto.ProfileDto;
 import com.project.moneymanager.service.EmailServices;
@@ -14,25 +12,20 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 import java.util.Map;
-
-
 @RestController
-//@RequestMapping()
-public class ProfileControllers {
-
+@RequestMapping("/api/v1.0")
+public class ProfileControllers
+{
     @Autowired
     private EmailServices emailServices;
-
     @Autowired
     private ProfileServices profileServices;
-
-
     @PostMapping("/register")
     public ResponseEntity<ProfileDto> register(@RequestBody ProfileDto profileDto){
+        System.out.println("in register");
         ProfileDto savedProfileDto=profileServices.register(profileDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProfileDto);
     }
-
     @GetMapping("/activate")
     public ResponseEntity<String> activate(@RequestParam String token){
         boolean isActivated= emailServices.activate(token);
@@ -63,11 +56,17 @@ public class ProfileControllers {
             ));
         }
     }
-
     @GetMapping("/test")
     public String testJwt() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return "Authenticated user: " + auth.getName();
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ProfileDto> getPublicProfile() {
+        ProfileDto profileDTO = profileServices.getPublicProfile(null);
+        return ResponseEntity.ok(profileDTO);
+    }
+
 
 }

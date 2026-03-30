@@ -1,4 +1,5 @@
 package com.project.moneymanager.service;
+
 import com.project.moneymanager.dto.AuthDto;
 import com.project.moneymanager.dto.ProfileDto;
 import com.project.moneymanager.entity.ProfileEntity;
@@ -18,29 +19,23 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.UUID;
 
+
 @Service
 @RequiredArgsConstructor
 public class ProfileServices {
 
     private final ProfileRepository profileRepository;
-
     private final EmailServices emailServices;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private AuthenticationManager authenticationManager;
-
     @Autowired
     private JwtUtil jwtUtil;
-
     @Value("${activation.link.url}")
     private String activationLink;
-
     public ProfileDto toProfileDto(ProfileEntity profile)
     {
-
         return ProfileDto
                 .builder()
                 .id(profile.getId())
@@ -49,12 +44,9 @@ public class ProfileServices {
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();
-
     }
-
     public ProfileEntity toProfileEntity(ProfileDto profileDto)
     {
-
         return ProfileEntity.builder()
                 .name(profileDto.getName())
                 .email(profileDto.getEmail())
@@ -64,10 +56,8 @@ public class ProfileServices {
                 .isActive(false)
                 .build();
     }
-
     public ProfileDto register(ProfileDto profileDto)
     {
-
             ProfileEntity profileEntity=toProfileEntity(profileDto);
             ProfileEntity savedProfileEntity=profileRepository.save(profileEntity);
             String activateLink=activationLink+"="+profileEntity.getActivationToken();
@@ -124,6 +114,25 @@ public class ProfileServices {
         }
         String email=auth.getName();
         return profileRepository.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("user not found "+email));
+    }
+
+    public ProfileDto getPublicProfile(String email) {
+        ProfileEntity currentUser = null;
+        if (email == null) {
+            currentUser = getCurrentProfile();
+        } else {
+            currentUser = profileRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("Profile not found with email: " + email));
+        }
+
+        return ProfileDto.builder()
+                .id(currentUser.getId())
+                .name(currentUser.getName())
+                .email(currentUser.getEmail())
+                .imageUrl(currentUser.getImageUrl())
+                .createdAt(currentUser.getCreatedAt())
+                .updatedAt(currentUser.getUpdatedAt())
+                .build();
     }
 
 }

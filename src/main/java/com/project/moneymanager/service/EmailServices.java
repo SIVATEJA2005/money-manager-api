@@ -64,6 +64,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -79,11 +80,13 @@ public class EmailServices
     private String fromEmail;
     private final String SEND_URL = "https://api.brevo.com/v3/smtp/email";
     public void sendEmail(String toEmail, String subject, String htmlContent) {
+
+        System.out.println(backendUrl+"-"+apiKey);
         RestTemplate restTemplate = new RestTemplate();
 
         Map<String, Object> body = new HashMap<>();
         body.put("sender", Map.of("name", "YourAppName", "email", fromEmail));
-        body.put("to", new Map[]{ Map.of("email", toEmail) });
+        body.put("to", List.of(Map.of("email", toEmail))); // ✅ fixed here
         body.put("subject", subject);
         body.put("htmlContent", htmlContent);
 
@@ -92,14 +95,15 @@ public class EmailServices
         headers.set("api-key", apiKey);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
         ResponseEntity<String> response = restTemplate.postForEntity(SEND_URL, request, String.class);
+
+        // Optional: log response for debugging
+        System.out.println("Brevo response: " + response.getStatusCode() + " | " + response.getBody());
 
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("Failed to send email: " + response.getBody());
         }
     }
-
 
 
     public boolean activate(String activationToken)

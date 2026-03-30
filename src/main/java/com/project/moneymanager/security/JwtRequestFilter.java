@@ -1,70 +1,60 @@
 package com.project.moneymanager.security;
 import com.project.moneymanager.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
+
 @Component
-@RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
     private UserDetailsService userDetailsService;
+    // NEW: Explicitly skip filtering for public routes
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
-    {
-
-        if (request.getMethod().equalsIgnoreCase("OPTIONS"))
-        {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/v1.0/register") ||
-                path.startsWith("/api/v1.0/login") ||
-                path.startsWith("/api/v1.0/activate") ||
-                path.startsWith("/api/v1.0/status") ||
-                path.startsWith("/api/v1.0/health")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-
-        final String authHeader=request.getHeader("Authorization");
-        String email=null;
-        String jwt=null;
-
-        if(authHeader!=null && authHeader.startsWith("Bearer "))
-        {
-            jwt=authHeader.substring(7);
-            email=jwtUtil.extractUserName(jwt);
-        }
-
-        if(email!=null && SecurityContextHolder.getContext().getAuthentication()==null)
-        {
-            UserDetails userDetails=this.userDetailsService.loadUserByUsername(email);
-            if(jwtUtil.validate(jwt,userDetails)){
-                UsernamePasswordAuthenticationToken authenticationToken=new UsernamePasswordAuthenticationToken(
-                        userDetails,null,userDetails.getAuthorities()
-                );
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-//                System.out.println(SecurityContextHolder.getContext().getAuthentication());
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        System.out.println("in filter request");
+        final String authHeader = request.getHeader("Authorization");
+        String email = null;
+        String jwt = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+            try {
+                email = jwtUtil.extractUserName(jwt);
+            } catch (ExpiredJwtException e) {
+                logger.warn("JWT token is expired");
+            } catch (Exception e) {
+                logger.error("Could not extract username from token", e);
             }
         }
-        filterChain.doFilter(request,response);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+            // Wrap validation in try-catch so an invalid token doesn't kill the request
+            try {
+                if (jwtUtil.validate(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            } catch (Exception e) {
+                logger.error("Token validation failed", e);
+            }
+        }
+        System.out.println("going out from filter request");
+        filterChain.doFilter(request, response);
     }
-
 }
