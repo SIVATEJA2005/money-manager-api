@@ -15,12 +15,12 @@ public class CatogoryControllers
 {
     @Autowired
     private CategoryServices categoryServices;
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<CategoryDto> addCateogry(@RequestBody CategoryDto categoryDto){
         CategoryDto savedCategory=categoryServices.saveCategory(categoryDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
     }
-    @GetMapping("/get")
+    @GetMapping
     public ResponseEntity<List<CategoryDto>>  getAllCategories(){
         List<CategoryDto> lst=categoryServices.getAllCategoryForCUrrentUser();
         return ResponseEntity.ok(lst);
