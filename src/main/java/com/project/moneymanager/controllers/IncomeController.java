@@ -8,19 +8,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
-@RequestMapping("/api/v1.0/income")
+@RequestMapping("/api/v1.0/incomes")
 public class IncomeController
 {
     @Autowired
     private IncomeServices incomeServices;
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<IncomeDto> addIncome(@RequestBody IncomeDto incomeDto){
         IncomeDto saved=incomeServices.addIncome(incomeDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @GetMapping("/get")
+    @GetMapping
     public ResponseEntity<List<IncomeDto>> getAllExpensesCurrentMonth()
     {
         List<IncomeDto> lst=incomeServices.getCurrentMonthIncome();

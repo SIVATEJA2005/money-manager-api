@@ -26,12 +26,12 @@ public class CatogoryControllers
         return ResponseEntity.ok(lst);
     }
 
-    @GetMapping("/get/{type}")
+    @GetMapping("/{type}")
     public ResponseEntity<List<CategoryDto>> getAllCategoriesOfType(@PathVariable String type) {
         List<CategoryDto> lst = categoryServices.getCategoriesBasedOnType(type);
         return ResponseEntity.ok(lst);
     }
-    @PutMapping("/update/{categoryId}")
+    @PutMapping("/{categoryId}")
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable Long categoryId,@RequestBody CategoryDto categoryDto)
     {
         CategoryDto updateCategory=categoryServices.updateCategory(categoryId,categoryDto);
