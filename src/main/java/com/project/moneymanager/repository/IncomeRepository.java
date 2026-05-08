@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 public interface IncomeRepository extends JpaRepository<IncomeEntity,Long>
 {
+        List<IncomeEntity> findByProfileId(Long profileId);
         List<IncomeEntity> findByProfileIdOrderByDateDesc(Long id);
         List<IncomeEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
         @Query(value="Select sum(e.amount) from income e where e.profile_id=:profileId",nativeQuery=true)

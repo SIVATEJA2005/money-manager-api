@@ -9,19 +9,38 @@ import com.project.moneymanager.repository.ProfileRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class ExpensesServices
 {
+
+    @Value("${BACKEND_URL}")
+    private String fromEmail;
+    private final String SEND_URL = "https://api.brevo.com/v3/smtp/email";
     @Autowired
     private ExpenseRepository expenseRepository;
 
+    @Value("${BREVO_API_KEY}")
+    private String apiKey;
     @Autowired
     private ProfileRepository profileRepository;
 
@@ -118,6 +137,48 @@ public class ExpensesServices
         List<ExpensesEntity> lst=expenseRepository.findByProfileIdAndDate(profileId,date);
         return lst.stream().map(this::toDto).toList();
     }
+
+    public ByteArrayInputStream downloadExpenseExcel() throws IOException {
+        ProfileEntity profile = profileServices.getCurrentProfile();
+        List<ExpensesEntity> expenseList = expenseRepository.findByProfileIdOrderByDateDesc(profile.getId());
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Expense Details");
+
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"ID", "Name", "Category", "Amount", "Date", "Created At"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                CellStyle style = workbook.createCellStyle();
+                Font font = workbook.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
+            }
+
+            int rowIdx = 1;
+            for (ExpensesEntity expense : expenseList) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(expense.getId());
+                row.createCell(1).setCellValue(expense.getName());
+                row.createCell(2).setCellValue(expense.getCategory() != null ? expense.getCategory().getName() : "");
+                row.createCell(3).setCellValue(expense.getAmount().doubleValue());
+                row.createCell(4).setCellValue(expense.getDate() != null ? expense.getDate().toString() : "");
+                row.createCell(5).setCellValue(expense.getCreatedAt() != null ? expense.getCreatedAt().toString() : "");
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
 
 
 }

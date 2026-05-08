@@ -64,14 +64,18 @@ public class CategoryServices
         return categoryEntityList.stream().map(this::toDto).toList();
     }
 
-    public CategoryDto updateCategory(Long id,CategoryDto categoryDto)
-    {
+    public CategoryDto updateCategory(Long id, CategoryDto categoryDto) {
+        System.out.println("Updating category id: " + id); // 👈 add this
+        System.out.println("CategoryDto: " + categoryDto.getName()); // 👈 add this
 
-        ProfileEntity profile=profileServices.getCurrentProfile();
-        System.out.println();
-        CategoryEntity categoryEntity=categoryRepository.findByIdAndProfileId(id,profile.getId()).orElseThrow(()->new RuntimeException("category of these id not found"));
+        ProfileEntity profile = profileServices.getCurrentProfile();
+        CategoryEntity categoryEntity = categoryRepository
+                .findByIdAndProfileId(id, profile.getId())
+                .orElseThrow(() -> new RuntimeException("category of these id not found"));
+
         categoryEntity.setName(categoryDto.getName());
         categoryEntity.setIcon(categoryDto.getIcon());
+        categoryEntity.setType(categoryDto.getType()); // ✅ add this too
         categoryRepository.save(categoryEntity);
         return toDto(categoryEntity);
     }

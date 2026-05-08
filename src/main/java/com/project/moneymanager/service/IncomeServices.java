@@ -14,20 +14,21 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 public class IncomeServices {
 
     @Autowired
     private IncomeRepository incomeRepository;
-
     @Autowired
     private ProfileServices profileServices;
-
     @Autowired
     private CategoryRepository categoryRepository;
-
     public IncomeEntity toEntity(IncomeDto incomeDto, ProfileEntity profile, CategoryEntity categoryEntity)
     {
         return IncomeEntity.builder()
@@ -41,7 +42,6 @@ public class IncomeServices {
                 .build();
 
     }
-
     public IncomeDto toDto(IncomeEntity incomeEntity)
     {
         return IncomeDto.builder()
@@ -56,9 +56,6 @@ public class IncomeServices {
                 .updatedAt(incomeEntity.getUpdatedAt())
                 .build();
     }
-
-
-
     public IncomeDto addIncome(IncomeDto incomeDto)
     {
 
@@ -68,9 +65,7 @@ public class IncomeServices {
         IncomeEntity incomeEntity=toEntity(incomeDto,profile,category);
         incomeEntity=incomeRepository.save(incomeEntity);
         return toDto(incomeEntity);
-
     }
-
     public List<IncomeDto> getCurrentMonthIncome()
     {
         ProfileEntity profile=profileServices.getCurrentProfile();
@@ -80,7 +75,6 @@ public class IncomeServices {
         List<IncomeEntity> incomeEntities=incomeRepository.findByProfileIdAndDateBetween(profile.getId(),startDate,endDate);
         return incomeEntities.stream().map(this::toDto).toList();
     }
-
     public IncomeDto deleteIncomeEntity(Long incomeId)
     {
         ProfileEntity profile=profileServices.getCurrentProfile();
@@ -93,26 +87,61 @@ public class IncomeServices {
         incomeRepository.delete(income);
         return toDto(income);
     }
-
-
     public List<IncomeDto> getLatest5Income(){
         ProfileEntity profile=profileServices.getCurrentProfile();
         List<IncomeEntity> lst=incomeRepository.findTop5ByProfileIdOrderByDateDesc(profile.getId());
         return lst.stream().map(this::toDto).toList();
     }
-
     public BigDecimal getAllIncome()
     {
         ProfileEntity profile=profileServices.getCurrentProfile();
         BigDecimal total=incomeRepository.findTotalIncomeByProfileId(profile.getId());
         return total==null?BigDecimal.ZERO:total;
     }
-
     public List<IncomeDto> filter(LocalDate startDate, LocalDate endDate, String keyword, Sort sort)
     {
         ProfileEntity profile=profileServices.getCurrentProfile();
         List<IncomeEntity> lst=incomeRepository.findByProfileIdAndDateBetweenAndNameContainingIgnoreCase(profile.getId(),startDate,endDate,keyword,sort);
         return lst.stream().map(this::toDto).toList();
+    }
+
+    public ByteArrayInputStream downloadIncomeExcel() throws IOException {
+        ProfileEntity profile = profileServices.getCurrentProfile();
+        List<IncomeEntity> incomeList = incomeRepository.findByProfileId(profile.getId());
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Income Details");
+            // Header row
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"ID", "Name", "Category", "Amount", "Date", "Created At"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                // Bold style for header
+                CellStyle style = workbook.createCellStyle();
+                Font font = workbook.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
+            }
+            // Data rows
+            int rowIdx = 1;
+            for (IncomeEntity income : incomeList) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(income.getId());
+                row.createCell(1).setCellValue(income.getName());
+                row.createCell(2).setCellValue(income.getCategory() != null ? income.getCategory().getName() : "");
+                row.createCell(3).setCellValue(income.getAmount().doubleValue());
+                row.createCell(4).setCellValue(income.getDate() != null ? income.getDate().toString() : "");
+                row.createCell(5).setCellValue(income.getCreatedAt() != null ? income.getCreatedAt().toString() : "");
+            }
+            // Auto size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
     }
 
 
