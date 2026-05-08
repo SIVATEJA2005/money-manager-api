@@ -31,7 +31,7 @@ public class DashBoardServices {
         Map<String,Object> returnValue=new LinkedHashMap<>();
         List<IncomeDto> lastestIncome=incomeServices.getLatest5Income();
         List<ExpensesDto> lastestExpenses=expensesServices.getLatest5Expenses();
-        List<RecentTranscationDto> recentTranscationDtos= Stream.concat(
+        List<RecentTranscationDto> recentTransactionDtos= Stream.concat(
             lastestIncome.stream().map(income->
                     RecentTranscationDto.builder()
                             .id(income.getId())
@@ -67,8 +67,8 @@ public class DashBoardServices {
         returnValue.put("totalIncome",incomeServices.getAllIncome());
         returnValue.put("totalExpense",expensesServices.getAllExpenses());
         returnValue.put("recentTop5Expenses",lastestExpenses);
-        returnValue.put("recentTop5Income",lastestIncome);
-        returnValue.put("recentTranscations",recentTranscationDtos);
+        returnValue.put("recentTop5Incomes",lastestIncome);
+        returnValue.put("recentTransactions",recentTransactionDtos);
         return returnValue;
     }
 
