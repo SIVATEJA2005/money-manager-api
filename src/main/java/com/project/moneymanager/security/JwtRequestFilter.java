@@ -54,7 +54,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 logger.error("Token validation failed", e);
             }
         }
-        System.out.println("going out from filter request");
+        System.out.println("Final Auth Status: " + SecurityContextHolder.getContext().getAuthentication());
+//        filterChain.doFilter(request, response);
         filterChain.doFilter(request, response);
     }
 }
