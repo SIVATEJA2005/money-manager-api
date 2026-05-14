@@ -23,6 +23,9 @@ public class JwtUtil {
     private final long time=1000*60*60*24*30L;
     public String generateToken(String email)
     {
+        System.out.println("Current Time: " + new Date());
+        System.out.println("Expiry Time: " + new Date(System.currentTimeMillis()+time));
+
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
@@ -52,7 +55,10 @@ public class JwtUtil {
     }
 
     public boolean isValid(String token){
+
         Date date=extractClaims(token,claims->claims.getExpiration());
+        System.out.println("Token Expiry: " + date);
+        System.out.println("Server Current Time: " + new Date());
         return date.after(new Date());
     }
 }
