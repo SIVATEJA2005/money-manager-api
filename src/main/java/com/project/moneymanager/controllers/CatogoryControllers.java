@@ -22,6 +22,7 @@ public class CatogoryControllers
     }
     @GetMapping
     public ResponseEntity<List<CategoryDto>>  getAllCategories(){
+        System.out.println("in get all categories");
         List<CategoryDto> lst=categoryServices.getAllCategoryForCUrrentUser();
         return ResponseEntity.ok(lst);
     }
